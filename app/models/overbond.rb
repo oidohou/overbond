@@ -26,7 +26,7 @@ class Overbond < ApplicationRecord
             benchmark = closest_government_bond(corporate_bond)
             spread    = delta(corporate_bond.yield, benchmark.yield)
         
-            [corporate_bond.id, benchmark.id, spread]
+            [corporate_bond.bond, benchmark.bond, spread]
         end
     
         to_csv(SPREAD_TO_BENCHMARK_HEADERS, benchmarks)
@@ -38,7 +38,7 @@ class Overbond < ApplicationRecord
             lower, upper = closest_government_bonds(corporate_bond)
             spread = interpolated_yield(corporate_bond, lower, upper)
       
-            [corporate_bond.id, spread]
+            [corporate_bond.bond, spread]
           end
       
           to_csv(SPREAD_TO_CURVE_HEADERS, curves)
