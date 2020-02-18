@@ -5,20 +5,25 @@ application up and running.
 
 Things you may want to cover:
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
 * Database creation
+
+$rails db:seed
+$rails db:create
 
 * Database initialization
 
+In the rails console 
+run Overbond.import
+
 * How to run the test suite
+$rails test
 
-* Services (job queues, cache servers, search engines, etc.)
+* Spread to curve and Spread to benchmark
 
-* Deployment instructions
+In the console 
+Initialize global attributes
 
-* ...
+    Overbond.spread_to_curve
+
+    Overbond.spread_to_benchmark
+
