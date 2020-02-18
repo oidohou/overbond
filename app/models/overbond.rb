@@ -1,6 +1,8 @@
 class Overbond < ApplicationRecord
     include Overbonds::OutputFormatter
 
+
+
     self.inheritance_column = :_type_disabled
     enum type: {corporate: "corporate", government: "government"}
 
@@ -17,16 +19,11 @@ class Overbond < ApplicationRecord
         end
     end
 
-    def self.initialize
-        @corporate_bonds =  Overbond.where(type: "corporate")
-        @government_bonds  = Overbond.where(type: "government")
-            
-    end
-
     def self.spread_to_benchmark
-        benchmarks = @corporate_bonds.map do |corporate_bond|
+        corporate_bonds =  Overbond.where(type: "corporate")
+        benchmarks = corporate_bonds.map do |corporate_bond|
             benchmark = closest_government_bond(corporate_bond)
-            spread    = delta(corporate_bond.yield_spread, benchmark.yield_spread)
+            spread    = delta(corporate_bond.yield, benchmark.yield)
         
             [corporate_bond.id, benchmark.id, spread]
         end
@@ -35,8 +32,9 @@ class Overbond < ApplicationRecord
     end
     
     def self.spread_to_curve
-        curves = @corporate_bonds.map do |corporate_bond|
-            lower, upper = closest_government_bonds(@corporate_bond)
+        corporate_bonds =  Overbond.where(type: "corporate")
+        curves = corporate_bonds.map do |corporate_bond|
+            lower, upper = closest_government_bonds(corporate_bond)
             spread = interpolated_yield(corporate_bond, lower, upper)
       
             [corporate_bond.id, spread]
@@ -48,13 +46,15 @@ class Overbond < ApplicationRecord
     
     private
     
-    def closest_government_bond(corporate_bond)
+    def self.closest_government_bond(corporate_bond)
+        government_bonds  = Overbond.where(type: "government")
         government_bonds.min_by do |bond|
             delta(bond.term, corporate_bond.term)
         end
     end
 
-    def closest_government_bonds(corporate_bond)
+    def self.closest_government_bonds(corporate_bond)
+        government_bonds  = Overbond.where(type: "government")
         lower_bonds, upper_bonds = government_bonds.partition do |bond|
             bond.term <= corporate_bond.term
         end
@@ -62,19 +62,26 @@ class Overbond < ApplicationRecord
         [lower_bonds.max_by(&:term), upper_bonds.min_by(&:term)]
     end
 
-    def interpolated_yield(corporate, lower, upper)
+    def self.interpolated_yield(corporate, lower, upper)
         delta(
-          corporate.yield_spread,
+          corporate.yield,
           (
             (
-              (corporate.term - lower.term) * upper.yield_spread +
-              (upper.term - corporate.term) * lower.yield_spread
+              (corporate.term - lower.term) * upper.yield +
+              (upper.term - corporate.term) * lower.yield
             ) / (upper.term - lower.term)
           )
         )
       end
     
-      def delta(minEnd, subEnd)
+      def self.delta(minEnd, subEnd)
         (minEnd - subEnd).abs
       end
+
+    def corporate_bonds 
+        @corporate_bonds =  Overbond.where(type: "corporate")
+    end
+    def government_bonds
+        @government_bonds  = Overbond.where(type: "government")
+    end
 end
