@@ -1,3 +1,4 @@
+
 class Overbond < ApplicationRecord
     include Overbonds::OutputFormatter
 
@@ -10,7 +11,7 @@ class Overbond < ApplicationRecord
 
     SPREAD_TO_BENCHMARK_HEADERS = %w(bond benchmark spread_to_benchmark).freeze.map(&:freeze)
     SPREAD_TO_CURVE_HEADERS     = %w(bond spread_to_curve).freeze.map(&:freeze)
-    
+    SPREAD_FORMAT = '%.2f'.freeze
 
     def self.import
         csv_text = File.read(Rails.root.join('lib', 'seeds', 'sample_input.csv'))
@@ -28,7 +29,7 @@ class Overbond < ApplicationRecord
             [corporate_bond.id, benchmark.id, spread]
         end
     
-        to_csv(headers: SPREAD_TO_BENCHMARK_HEADERS, rows: benchmarks)
+        to_csv(SPREAD_TO_BENCHMARK_HEADERS, benchmarks)
     end
     
     def self.spread_to_curve
@@ -40,7 +41,7 @@ class Overbond < ApplicationRecord
             [corporate_bond.id, spread]
           end
       
-          to_csv(headers: SPREAD_TO_CURVE_HEADERS, rows: curves)
+          to_csv(SPREAD_TO_CURVE_HEADERS, curves)
     end
 
     
@@ -76,6 +77,23 @@ class Overbond < ApplicationRecord
     
       def self.delta(minEnd, subEnd)
         (minEnd - subEnd).abs
+      end
+
+
+      
+
+      def self.to_csv(headers, rows)
+        CSV.generate(headers: :first_row) do |csv|
+          csv << headers
+          rows.each do |row|
+            csv << with_printable_spread(row)
+          end
+        end
+      end
+  
+      def self.with_printable_spread(row)
+        row[-1] = sprintf(SPREAD_FORMAT, row.last)
+        row
       end
 
     def corporate_bonds 
