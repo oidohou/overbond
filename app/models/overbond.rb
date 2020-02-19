@@ -1,17 +1,15 @@
-
 class Overbond < ApplicationRecord
     include Overbonds::OutputFormatter
-
-
-
+    attr_reader :corporate_bonds , :government_bonds
     self.inheritance_column = :_type_disabled
     enum type: {corporate: "corporate", government: "government"}
 
-    attr_accessor :corporate_bonds , :government_bonds
+    
 
     SPREAD_TO_BENCHMARK_HEADERS = %w(bond benchmark spread_to_benchmark).freeze.map(&:freeze)
     SPREAD_TO_CURVE_HEADERS     = %w(bond spread_to_curve).freeze.map(&:freeze)
     SPREAD_FORMAT = '%.2f'.freeze
+
 
     def self.import
         csv_text = File.read(Rails.root.join('lib', 'seeds', 'sample_input.csv'))
@@ -44,6 +42,17 @@ class Overbond < ApplicationRecord
           to_csv(SPREAD_TO_CURVE_HEADERS, curves)
     end
 
+    def initialize(bonds)
+
+      bonds.partition do |bond| 
+        if bond.type = "corporate"
+          @corporate_bonds << bond
+        elseif bond.type = "government"
+          @government_bonds << bond
+        end
+
+      end
+    end
     
     private
     
@@ -96,10 +105,10 @@ class Overbond < ApplicationRecord
         row
       end
 
-    def corporate_bonds 
+    def self.corporate_bonds 
         @corporate_bonds =  Overbond.where(type: "corporate")
     end
-    def government_bonds
+    def self.government_bonds
         @government_bonds  = Overbond.where(type: "government")
     end
 end
