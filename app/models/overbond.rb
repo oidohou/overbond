@@ -1,6 +1,6 @@
 class Overbond < ApplicationRecord
-    include Overbonds::OutputFormatter
-    attr_reader :corporate_bonds , :government_bonds
+    attr_reader :corporate_bonds
+    attr_reader :government_bonds
     self.inheritance_column = :_type_disabled
     enum type: {corporate: "corporate", government: "government"}
 
@@ -19,8 +19,7 @@ class Overbond < ApplicationRecord
     end
 
     def self.spread_to_benchmark
-        corporate_bonds =  Overbond.where(type: "corporate")
-        benchmarks = corporate_bonds.map do |corporate_bond|
+        benchmarks = @corporate_bonds.map do |corporate_bond|
             benchmark = closest_government_bond(corporate_bond)
             spread    = delta(corporate_bond.yield, benchmark.yield)
         
@@ -31,8 +30,7 @@ class Overbond < ApplicationRecord
     end
     
     def self.spread_to_curve
-        corporate_bonds =  Overbond.where(type: "corporate")
-        curves = corporate_bonds.map do |corporate_bond|
+        curves = @corporate_bonds.map do |corporate_bond|
             lower, upper = closest_government_bonds(corporate_bond)
             spread = interpolated_yield(corporate_bond, lower, upper)
       
@@ -42,30 +40,24 @@ class Overbond < ApplicationRecord
           to_csv(SPREAD_TO_CURVE_HEADERS, curves)
     end
 
-    def initialize(bonds)
-
-      bonds.partition do |bond| 
-        if bond.type = "corporate"
-          @corporate_bonds << bond
-        elseif bond.type = "government"
-          @government_bonds << bond
-        end
-
-      end
+    def self.initializeGov
+      @government_bonds = Overbond.where(type: "government")
     end
     
+    def self.initializeCorp
+      @corporate_bonds =  Overbond.where(type: "corporate")
+    end
+
     private
     
     def self.closest_government_bond(corporate_bond)
-        government_bonds  = Overbond.where(type: "government")
-        government_bonds.min_by do |bond|
+        @government_bonds.min_by do |bond|
             delta(bond.term, corporate_bond.term)
         end
     end
 
     def self.closest_government_bonds(corporate_bond)
-        government_bonds  = Overbond.where(type: "government")
-        lower_bonds, upper_bonds = government_bonds.partition do |bond|
+        lower_bonds, upper_bonds = @government_bonds.partition do |bond|
             bond.term <= corporate_bond.term
         end
 

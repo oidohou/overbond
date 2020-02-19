@@ -3,27 +3,37 @@
 This README would normally document whatever steps are necessary to get the
 application up and running.
 
-Things you may want to cover:
-
 * Database creation
 
-$rails db:seed
-$rails db:create
+    Database used : pg
+    
+    * $rails db:create
+    
+    * $rails db:migrate
 
 * Database initialization
 
-In the rails console 
-run Overbond.import
+    In the rails console 
+    
+        Overbond.import
 
 * How to run the test suite
-$rails test
+    
+    $rails test
 
 * Spread to curve and Spread to benchmark
 
-In the console 
-Initialize global attributes
+    In the rails console  =  $rails c
 
-    Overbond.spread_to_curve
+    Initialize global attributes
 
-    Overbond.spread_to_benchmark
+        * overbond = Overbond.initializeGov
+
+        * overbond = Overbond.initializeCorp
+
+    Spreads
+
+        overbond.spread_to_curve
+
+        overbond.spread_to_benchmark
 
